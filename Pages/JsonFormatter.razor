@@ -1,0 +1,21 @@
+﻿@page "/json-formatter"
+@using Newtonsoft.Json.Linq;
+@using Newtonsoft.Json;
+
+<h1>JSON Formatter</h1>
+
+<textarea placeholder="Paste unformatted json here" @bind="unformattedJson" rows="20" style="width: 500px"></textarea>
+<textarea disabled @bind="formatedJson" rows="20" style="width: 500px"></textarea>
+
+<button class="btn btn-primary" @onclick="FormatJson">Format</button>
+
+@code {
+    private string unformattedJson = "";
+    private string formatedJson = "";
+
+    private void FormatJson()
+    {
+        var json = JValue.Parse(unformattedJson);
+        formatedJson = json.ToString(Formatting.Indented);
+    }
+}
