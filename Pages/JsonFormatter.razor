@@ -1,21 +1,38 @@
 ﻿@page "/json-formatter"
-@using Newtonsoft.Json.Linq;
-@using Newtonsoft.Json;
+@using System.Text.Json;
 
 <h1>JSON Formatter</h1>
 
-<textarea placeholder="Paste unformatted json here" @bind="unformattedJson" rows="20" style="width: 500px"></textarea>
-<textarea disabled @bind="formatedJson" rows="20" style="width: 500px"></textarea>
-
+<div class="d-flex">
+	<textarea placeholder="Paste unformatted json here" @bind="unformattedJson" rows="10" style="width: 500px"></textarea>
+	<div style="width: 500px; height: 100%;">
+		@if (formatedJson.Value != null)
+		{
+			<pre class="language-json"><code class="language-json">@formatedJson</code></pre>
+		}
+	</div>
+</div>
 <button class="btn btn-primary" @onclick="FormatJson">Format</button>
 
 @code {
-    private string unformattedJson = "";
-    private string formatedJson = "";
+	private string? unformattedJson { get; set; }
+	private MarkupString formatedJson { get; set; }
+	[Inject] private IJSRuntime _js { get; set; }
 
-    private void FormatJson()
-    {
-        var json = JValue.Parse(unformattedJson);
-        formatedJson = json.ToString(Formatting.Indented);
-    }
+	private async Task FormatJson()
+	{
+		formatedJson = await PrettifyJson(unformattedJson);
+	}
+
+	private async Task<MarkupString> PrettifyJson(string json)
+	{
+		using var jDoc = JsonDocument.Parse(json);
+		var prettyJson = JsonSerializer.Serialize(jDoc,
+			new JsonSerializerOptions
+				{
+					WriteIndented = true
+				});
+
+		return new MarkupString(await _js.InvokeAsync<string>("highlight", prettyJson));
+	}
 }
